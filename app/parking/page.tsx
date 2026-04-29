@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
 
 type ParkingSlot = {
@@ -16,16 +17,16 @@ export default function ParkingPage() {
   const searchParams = useSearchParams();
   const assignedSlot = searchParams.get("slot");
 
-  const assignedSection = assignedSlot
-    ? assignedSlot.charAt(0)
-    : null;
+  // const assignedSection = assignedSlot
+  //   ? assignedSlot.charAt(0)
+  //   : null;
 
-  type PathSegment =
-    | "BOTTOM"
-    | "LEFT"
-    | "RIGHT"
-    | "CENTER"
-    | "TOP";
+  // type PathSegment =
+  //   | "BOTTOM"
+  //   | "LEFT"
+  //   | "RIGHT"
+  //   | "CENTER"
+  //   | "TOP";
 
   const fetchSlots = async () => {
     const { data } = await supabase
@@ -39,39 +40,40 @@ export default function ParkingPage() {
   useEffect(() => {
     const t = setTimeout(() => {
       setVisible(true);
-    }, 500); 
+    }, 500);
 
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    fetchSlots();
+    const load = async () => {
+      await fetchSlots();
+    };
+
+    load();
 
     const channel = supabase
       .channel("parking")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "parking_slots" },
-        fetchSlots
+        {
+          event: "*",
+          schema: "public",
+          table: "parking_slots",
+        },
+        async (payload) => {
+          console.log("REALTIME:", payload); // debug
+          await fetchSlots(); // ensure update
+        }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("SUB STATUS:", status); // debug connection
+      });
 
-    return () => supabase.removeChannel(channel);
-  }, []);
-
-  useEffect(() => {
-    const handler = async (e: KeyboardEvent) => {
-      if (e.key === "p" && assignedSlot) {
-        await supabase
-          .from("parking_slots")
-          .update({ status: "occupied" })
-          .eq("id", assignedSlot);
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [assignedSlot]);
+  }, []);
 
   const getSectionSlots = (section: string) =>
     slots.filter((s) => s.id.startsWith(section));
@@ -87,6 +89,22 @@ export default function ParkingPage() {
           : "opacity-0 scale-[0.98] blur-sm"}
   `}
     >
+      <Link
+        href="/"
+        className="
+        absolute top-6 left-6
+        bg-neutral-900 border border-neutral-600
+        rounded-xl px-4 py-3
+        shadow-lg
+        hover:bg-neutral-800 transition
+        flex items-center justify-center
+      "
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
+        </svg>
+      </Link>
+
       {assignedSlot && (
         <div className="
     absolute top-6 right-6
@@ -94,11 +112,11 @@ export default function ParkingPage() {
     rounded-xl px-5 py-3
     text-right shadow-lg
   ">
-          <div className="text-3xl text-neutral-400">
+          <div className="text-3xl text-neutral-400 font-thin">
             Assigned Slot
           </div>
 
-          <div className="text-5xl text-center font-semibold text-green-400 tracking-wide">
+          <div className="text-5xl pt-2 text-center font-semibold text-[#018136] tracking-wide">
             {assignedSlot}
           </div>
         </div>
@@ -179,8 +197,8 @@ export default function ParkingPage() {
         px-8 py-4 rounded-xl text-sm text-neutral-300">
 
         <Legend color="bg-white" label="Free" text="text-black" />
-        <Legend color="bg-neutral-300" label="Reserved" text="text-black" />
-        <Legend color="bg-neutral-700" label="Occupied" text="text-white" />
+        <Legend color="bg-neutral-500" label="Reserved" text="text-black" />
+        <Legend color="bg-neutral-800" label="Occupied" text="text-white" />
         <Legend color="bg-green-700 ring-2 ring-white" label="Assigned Slot" text="" />
 
       </div>
@@ -268,19 +286,24 @@ function SlotRow({
           slot.status === "free"
             ? "bg-white text-black"
             : slot.status === "reserved"
-              ? "bg-neutral-300 text-black"
-              : "bg-neutral-700 text-white";
+              ? "bg-neutral-500 text-black"
+              : "bg-neutral-800 text-white";
 
         return (
           <div
             key={slot.id}
-            className={`w-14 h-14 rounded-lg flex items-center justify-center
-                transition-all duration-300
-                ${isAssigned
-                ? "bg-green-700 text-white ring-2 ring-white scale-110"
-                : style
+            className={`
+      w-14 h-14 rounded-lg flex items-center justify-center
+      transition-all duration-300
+      ${slot.status === "occupied"
+                ? "bg-neutral-800 text-white"
+                : slot.status === "reserved"
+                  ? isAssigned
+                    ? "bg-green-700 text-white ring-2 ring-white scale-110"
+                    : "bg-neutral-500 text-black"
+                  : "bg-white text-black"
               }
-              `}
+    `}
           >
             {slot.id}
           </div>
