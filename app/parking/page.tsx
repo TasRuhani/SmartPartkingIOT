@@ -122,7 +122,7 @@ export default function ParkingPage() {
         </div>
       )}
 
-      <div className="relative w-[1200px] h-[780px]
+      <div className="relative w-w00 h-195
         border border-neutral-700 rounded-3xl">
 
 
@@ -138,7 +138,7 @@ export default function ParkingPage() {
         <ArrowRow dir="left" className="absolute top-8 left-32 right-32 h-10 items-center" />
 
         {/* CENTER ROAD */}
-        <ArrowRow dir="left" className="absolute top-[380px] left-32 right-32 h-10 items-center" />
+        <ArrowRow dir="left" className="absolute top-95 left-32 right-32 h-10 items-center" />
 
         {/* BOTTOM ROAD */}
         <ArrowRow dir="right" className="absolute bottom-20 left-32 right-32 h-10 items-center" />
@@ -155,7 +155,7 @@ export default function ParkingPage() {
         <ArrowColumn
           dir="up"
           className="absolute left-1/2 -translate-x-1/2
-                   top-[150px] bottom-[150px] w-10 justify-center"
+                   top-37.5 bottom-37.5 w-10 justify-center"
         />
 
 
@@ -178,7 +178,7 @@ export default function ParkingPage() {
         {/* A */}
         <Island
           title="A"
-          className="absolute top-[435px] left-36"
+          className="absolute top-108.75 left-36"
           slots={getSectionSlots("A")}
           assignedSlot={assignedSlot}
         />
@@ -186,7 +186,7 @@ export default function ParkingPage() {
         {/* B */}
         <Island
           title="B"
-          className="absolute top-[435px] right-36"
+          className="absolute top-108.75 right-36"
           slots={getSectionSlots("B")}
           assignedSlot={assignedSlot}
         />
@@ -282,12 +282,12 @@ function SlotRow({
       {slots.map((slot) => {
         const isAssigned = slot.id === assignedSlot;
 
-        const style =
-          slot.status === "free"
-            ? "bg-white text-black"
-            : slot.status === "reserved"
-              ? "bg-neutral-500 text-black"
-              : "bg-neutral-800 text-white";
+        // const style =
+        //   slot.status === "free"
+        //     ? "bg-white text-black"
+        //     : slot.status === "reserved"
+        //       ? "bg-neutral-500 text-black"
+        //       : "bg-neutral-800 text-white";
 
         return (
           <div
